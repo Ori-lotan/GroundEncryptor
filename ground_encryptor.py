@@ -1,6 +1,8 @@
+import os
 import time
 import socket
 import random
+import threading
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,3 +29,20 @@ def ground_encryptor_key_exchange(host, port, droneId):
     while True:
         print('waiting for drone {} communication'.format(droneId))
         time.sleep(5)
+
+if __name__ =="__main__":
+    FIRST_DRONE_HOST = os.environ["first-drone-host"]
+    FIRST_DRONE_PORT = int(os.environ["first-drone-port"])
+    SECOND_DRONE_HOST = os.environ["second-drone-host"]
+    SECOND_DRONE_PORT = int(os.environ["second-drone-port"])
+
+    first_drone_thread = threading.Thread(
+        target=ground_encryptor_key_exchange,
+        args=(FIRST_DRONE_HOST, FIRST_DRONE_PORT, 1))
+    
+    second_drone_thread = threading.Thread(
+        target=ground_encryptor_key_exchange,
+        args=(SECOND_DRONE_HOST, SECOND_DRONE_PORT, 2))
+
+    first_drone_thread.start()
+    second_drone_thread.start()
