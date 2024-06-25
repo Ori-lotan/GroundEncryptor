@@ -24,19 +24,25 @@ class AESCipher(object):
         c = AES.new(kc, AES.MODE_CBC, iv).encrypt(raw.encode())
         m = hmac.new(km, iv + c, hashlib.sha512).digest()
 
+        # if you want to see the signature check in action - uncomment the command below
+        #c = AES.new(kc, AES.MODE_CBC, iv).encrypt(self._pad('hacked!!!').encode())
         return base64.b64encode(iv + c + m)
 
-    def decrypt(self, encyptedMsg):
+    def decrypt(self, encryptedMsg):
         # slice the 512bit key
         kc = self.key[:32]
         km = self.key[32:]
+        encryptedMsg = base64.b64decode(encryptedMsg)
 
-        encyptedMsg = base64.b64decode(encyptedMsg)
-
-        iv = encyptedMsg[:AES.block_size]
-
+        iv = encryptedMsg[:AES.block_size]
+        m = encryptedMsg[-64:]
+        ivc = encryptedMsg[:-64]
         c = AES.new(kc, AES.MODE_CBC, iv)
-        return AESCipher._unpad(c.decrypt(encyptedMsg[AES.block_size:])).decode('utf-8')
+        # check if data was changed using the HMAC
+        if hmac.new(km, ivc, hashlib.sha512).digest() != m:
+            raise Exception('<<WARNING>> your packet was hacked!!')
+
+        return AESCipher._unpad(c.decrypt(encryptedMsg[AES.block_size:-64])).decode('utf-8')
 
     def _pad(self, s):
         return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)

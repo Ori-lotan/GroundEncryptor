@@ -4,23 +4,23 @@ from AESCipher import AESCipher
 
 def decryptMessage(message):
     aes = AESCipher('0123456789abcdef0123456789abcdef') # example -> change with diffi hellman result
-    return aes.decrypt(message)
+    dec = aes.decrypt(message)
+    return dec
+
+
 def handle_client(client_socket, addr):
     try:
         while True:
             request = client_socket.recv(1024).decode("utf-8")
             decrypted = decryptMessage(request)
 
-            print(f"[SERVER] //ENCRYPTED// Received: {request}")
-            print(f"[SERVER] //DECRYPTED// Received: {decrypted}")
-
-
-
+            print(f"[SERVER] Received: {decrypted}")
 
             response = "OK"
             client_socket.send(response.encode("utf-8"))
     except Exception as e:
         print(f"[SERVER] Error when hanlding client: {e}")
+        client_socket.send(f"error sending message->{e}\n closing connection".encode("utf-8"))
     finally:
         client_socket.close()
         print(f"[SERVER] Connection to client ({addr[0]}:{addr[1]}) closed")
